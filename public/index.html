@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okta Protected App</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #login-status { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; }
+        .user-info { margin-top: 10px; }
+        nav a { margin-right: 15px; }
+    </style>
+</head>
+<body>
+    <h1>My Awesome App</h1>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/protected">Protected Page</a>
+        <button id="loginButton" style="display: none;">Login</button>
+        <button id="logoutButton" style="display: none;">Logout</button>
+    </nav>
+
+    <div id="login-status">
+        <p>Loading login status...</p>
+    </div>
+
+    <script>
+        const loginButton = document.getElementById('loginButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const loginStatusDiv = document.getElementById('login-status');
+
+        loginButton.onclick = () => window.location.href = '/login';
+        logoutButton.onclick = () => window.location.href = '/logout';
+
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/userinfo');
+                const data = await response.json();
+
+                if (data.isAuthenticated) {
+                    loginStatusDiv.innerHTML = `
+                        <p>You are logged in as: <strong>${data.user.name || data.user.preferred_username || data.user.email}</strong></p>
+                        <div class="user-info">
+                            <h3>User Details:</h3>
+                            <pre>${JSON.stringify(data.userInfo, null, 2)}</pre>
+                        </div>
+                    `;
+                    loginButton.style.display = 'none';
+                    logoutButton.style.display = 'inline-block';
+                } else {
+                    loginStatusDiv.innerHTML = '<p>You are not logged in.</p>';
+                    loginButton.style.display = 'inline-block';
+                    logoutButton.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching login status:', error);
+                loginStatusDiv.innerHTML = '<p>Error checking login status.</p>';
+            }
+        }
+
+        // Check status when page loads
+        checkLoginStatus();
+    </script>
+</body>
+</html>
